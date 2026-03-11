@@ -10,6 +10,10 @@ from .const import CONNECTION_RETRY_ERRORS
 
 _LOGGER = logging.getLogger(__name__)
 
+RE_CMD_RESULT = re.compile(r"([^:]+):(.+)")
+RE_RGB_MATCH = re.compile(r"^\d+-(\d+),(\d+),(\d+);")
+
+
 class PrismatikAPI(Enum):
     """Prismatik API literals."""
 
@@ -77,18 +81,18 @@ class PrismatikClient:
         self._retries = CONNECTION_RETRY_ERRORS
         self._api_connected = False
 
-    def __del__(self) -> None:
-        """Clean up."""
-        self.disconnect()
-
     async def _connect(self) -> bool:
         """Connect to Prismatik server."""
         try:
-            self._tcpreader, self._tcpwriter = await asyncio.open_connection(self._host, self._port)
+            self._tcpreader, self._tcpwriter = await asyncio.open_connection(
+                self._host, self._port
+            )
         except (ConnectionRefusedError, TimeoutError, OSError):
             if self._retries > 0:
                 self._retries -= 1
-                _LOGGER.error("Could not connect to Prismatik at %s:%s", self._host, self._port)
+                _LOGGER.error(
+                    "Could not connect to Prismatik at %s:%s", self._host, self._port
+                )
             await self.disconnect()
         else:
             # check header
@@ -139,7 +143,9 @@ class PrismatikClient:
                 _LOGGER.error("Could not lock Prismatik")
                 answer = None
             if answer == PrismatikAPI.AWR_AUTH_REQ:
-                if self._apikey and (await self._do_cmd(PrismatikAPI.CMD_APIKEY, self._apikey)):
+                if self._apikey and (
+                    await self._do_cmd(PrismatikAPI.CMD_APIKEY, self._apikey)
+                ):
                     self._api_connected = True
                     return await self._send(buffer)
                 _LOGGER.error("Prismatik authentication failed, check API key")
@@ -151,8 +157,10 @@ class PrismatikClient:
     async def _get_cmd(self, cmd: PrismatikAPI) -> Optional[str]:
         """Execute get-command Prismatik server."""
         answer = await self._send(f"get{cmd}\n")
-        matches = re.compile(fr"{cmd}:(.+)").match(answer or "")
-        return matches.group(1) if matches else None
+        matches = RE_CMD_RESULT.match(answer or "")
+        if matches and matches.group(1) == str(cmd):
+            return matches.group(2)
+        return None
 
     async def _set_cmd(self, cmd: PrismatikAPI, value: Any) -> bool:
         """Execute set-command Prismatik server."""
@@ -164,12 +172,12 @@ class PrismatikClient:
         answer = await self._send(f"{cmd}{value}\n")
         return (
             re.compile(
-                fr"^({PrismatikAPI.AWR_OK}|{cmd}:{PrismatikAPI.AWR_SUCCESS})$"
+                rf"^({PrismatikAPI.AWR_OK}|{cmd}:{PrismatikAPI.AWR_SUCCESS})$"
             ).match(answer or "")
             is not None
         )
 
-    async def _set_rgb_color(self, rgb: Tuple[int,int,int]) -> bool:
+    async def _set_rgb_color(self, rgb: Tuple[int, int, int]) -> bool:
         """Generate and execude setcolor command on Prismatik server."""
         leds = await self.leds()
         if leds == 0:
@@ -215,7 +223,9 @@ class PrismatikClient:
         """Turn OFF."""
         return await self._set_cmd(PrismatikAPI.CMD_SET_STATUS, PrismatikAPI.STS_OFF)
 
-    async def set_brightness(self, brightness: int, profile: Optional[str]=None) -> bool:
+    async def set_brightness(
+        self, brightness: int, profile: Optional[str] = None
+    ) -> bool:
         """Set brightness (0-100)."""
         if not await self._set_cmd(PrismatikAPI.CMD_SET_BRIGHTNESS, brightness):
             return False
@@ -231,20 +241,26 @@ class PrismatikClient:
         brightness = await self._get_cmd(PrismatikAPI.CMD_GET_BRIGHTNESS)
         return int(brightness) if brightness is not None else None
 
-    async def set_color(self, rgb: Tuple[int, int, int], profile: Optional[str]=None) -> bool:
+    async def set_color(
+        self, rgb: Tuple[int, int, int], profile: Optional[str] = None
+    ) -> bool:
         """Set (R,G,B) to all LEDs"""
         if profile:
             if not await self._do_cmd(PrismatikAPI.CMD_NEW_PROFILE, profile):
                 return False
-            if not await self._set_cmd(PrismatikAPI.CMD_SET_PERSIST_ON_UNLOCK, PrismatikAPI.STS_ON):
+            if not await self._set_cmd(
+                PrismatikAPI.CMD_SET_PERSIST_ON_UNLOCK, PrismatikAPI.STS_ON
+            ):
                 return False
         return await self._set_rgb_color(rgb)
 
-    async def get_color(self) -> Optional[Tuple[int,int,int]]:
+    async def get_color(self) -> Optional[Tuple[int, int, int]]:
         """Get current (R,G,B) for the first LED"""
         pixels = await self._get_cmd(PrismatikAPI.CMD_GET_COLOR)
-        rgb = re.match(r"^\d+-(\d+),(\d+),(\d+);", pixels or "")
-        return (int(rgb.group(1)), int(rgb.group(2)), int(rgb.group(3))) if rgb else None
+        rgb = RE_RGB_MATCH.match(pixels or "")
+        return (
+            (int(rgb.group(1)), int(rgb.group(2)), int(rgb.group(3))) if rgb else None
+        )
 
     async def unlock(self) -> bool:
         """Unlock API"""
@@ -265,6 +281,8 @@ class PrismatikClient:
 
     async def set_profile(self, profile: str) -> bool:
         """Set current profile name"""
-        if not await self._set_cmd(PrismatikAPI.CMD_SET_PERSIST_ON_UNLOCK, PrismatikAPI.STS_OFF):
+        if not await self._set_cmd(
+            PrismatikAPI.CMD_SET_PERSIST_ON_UNLOCK, PrismatikAPI.STS_OFF
+        ):
             return False
         return await self._set_cmd(PrismatikAPI.CMD_SET_PROFILE, profile)

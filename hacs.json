@@ -2,6 +2,5 @@
 	"name": "Prismatik",
 	"domains": ["light"],
 	"render_readme": true,
-	"iot_class": "Local Polling",
-	"content_in_root": true
+	"iot_class": "local_polling"
 }

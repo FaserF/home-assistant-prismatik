@@ -1,5 +1,6 @@
 """Prismatik light."""
-from typing import Any, Callable, Dict, List, Optional, Set
+
+from typing import Any, Callable, Dict, List, Optional
 
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
@@ -9,7 +10,6 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_EFFECT_LIST,
     ATTR_HS_COLOR,
-    COLOR_MODE_HS,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -32,7 +32,7 @@ from .const import (
     DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_PROFILE_NAME,
-    DOMAIN
+    DOMAIN,
 )
 
 from .prismatik import PrismatikClient
@@ -47,6 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: Dict,
@@ -57,14 +58,15 @@ async def async_setup_platform(
     # pylint: disable=unused-argument
 
     client = PrismatikClient(
-            config[CONF_HOST],
-            config[CONF_PORT],
-            config.get(CONF_API_KEY)
-        )
-    light = PrismatikLight(hass, config[CONF_NAME], client, config.get(CONF_PROFILE_NAME))
+        config[CONF_HOST], config[CONF_PORT], config.get(CONF_API_KEY)
+    )
+    light = PrismatikLight(
+        hass, config[CONF_NAME], client, config.get(CONF_PROFILE_NAME)
+    )
     await light.async_update()
 
     async_add_entities([light])
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -76,11 +78,11 @@ async def async_setup_entry(
     if config_entry.options:
         config.update(config_entry.options)
     client = PrismatikClient(
-        config[CONF_HOST],
-        config[CONF_PORT],
-        config.get(CONF_API_KEY)
+        config[CONF_HOST], config[CONF_PORT], config.get(CONF_API_KEY)
     )
-    light = PrismatikLight(hass, config[CONF_NAME], client, config.get(CONF_PROFILE_NAME))
+    light = PrismatikLight(
+        hass, config[CONF_NAME], client, config.get(CONF_PROFILE_NAME)
+    )
     await light.async_update()
 
     async_add_entities([light])
@@ -94,7 +96,7 @@ class PrismatikLight(LightEntity):
         hass: HomeAssistant,
         name: str,
         client: PrismatikClient,
-        profile: Optional[str]
+        profile: Optional[str],
     ) -> None:
         """Intialize."""
         self._hass = hass
@@ -110,11 +112,11 @@ class PrismatikLight(LightEntity):
         self._attr_supported_features = LightEntityFeature.EFFECT
 
         self._state = {
-            ATTR_STATE : False,
-            ATTR_EFFECT : None,
-            ATTR_EFFECT_LIST : None,
-            ATTR_BRIGHTNESS : None,
-            ATTR_HS_COLOR : None,
+            ATTR_STATE: False,
+            ATTR_EFFECT: None,
+            ATTR_EFFECT_LIST: None,
+            ATTR_BRIGHTNESS: None,
+            ATTR_HS_COLOR: None,
         }
 
     async def async_will_remove_from_hass(self) -> None:
@@ -185,7 +187,9 @@ class PrismatikLight(LightEntity):
         if ATTR_EFFECT in kwargs:
             await self._client.set_profile(kwargs[ATTR_EFFECT])
         elif ATTR_BRIGHTNESS in kwargs:
-            await self._client.set_brightness(round(kwargs[ATTR_BRIGHTNESS] / 2.55), self._profile)
+            await self._client.set_brightness(
+                round(kwargs[ATTR_BRIGHTNESS] / 2.55), self._profile
+            )
         elif ATTR_HS_COLOR in kwargs:
             rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
             await self._client.set_color(rgb, self._profile)

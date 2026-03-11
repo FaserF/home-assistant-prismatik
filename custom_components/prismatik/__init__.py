@@ -2,12 +2,13 @@
 Prismatik integration.
 https://github.com/psieg/Lightpack
 """
-import asyncio
+
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import Platform
 from .const import DOMAIN
 
 PLATFORMS = [Platform.LIGHT]
+
 
 async def async_setup(hass, config):
     """Set up the Prismatik integration."""
@@ -20,7 +21,6 @@ async def async_setup(hass, config):
         )
 
     return True
-
 
 
 async def async_setup_entry(hass, entry):
