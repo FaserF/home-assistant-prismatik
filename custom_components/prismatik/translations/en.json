@@ -53,7 +53,7 @@
     "issues": {
         "deprecated_yaml": {
             "title": "Legacy YAML configuration detected",
-            "description": "Prismatik YAML configuration is deprecated. Your configuration has been automatically imported into the UI. Please remove the `prismatik` configuration from your configuration.yaml file and restart Home Assistant to clear this issue."
+            "description": "The Prismatik YAML configuration in your `configuration.yaml` is deprecated and has been automatically imported into the UI. You can now safely remove the `prismatik` section from your YAML file and restart Home Assistant to clear this message."
         }
     }
 }

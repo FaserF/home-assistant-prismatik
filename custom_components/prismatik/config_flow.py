@@ -87,7 +87,7 @@ class PrismatikFlow:  # pylint: disable=too-few-public-methods
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class PrismatikConfigFlow(PrismatikFlow, config_entries.ConfigFlow, domain=DOMAIN):
+class PrismatikConfigFlow(PrismatikFlow, config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]
     """Handle a config flow for Prismatik."""
 
     VERSION = 1

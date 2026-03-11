@@ -42,7 +42,7 @@ class PrismatikAPIStatusBinarySensor(CoordinatorEntity, BinarySensorEntity):
         light_unique_id = f"{host}_{self._client.port}"
         self._attr_unique_id = f"{light_unique_id}_api_status"
 
-        self._attr_icon = "mdi:sync-lock"
+        self._attr_icon = "mdi:progress-clock"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, light_unique_id)},
         }

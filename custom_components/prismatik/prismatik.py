@@ -63,12 +63,14 @@ class PrismatikAPI(Enum):
     MOD_MOODLIGHT = "moodlight"
 
     def __str__(self) -> str:
-        # pylint: disable=invalid-str-returned
-        return self.value
+        """Return value as string."""
+        return str(self.value)
 
-    def __eq__(self, other: str) -> bool:
-        # pylint: disable=comparison-with-callable
-        return self.value == other
+    def __eq__(self, other: object) -> bool:
+        """Check equality."""
+        if isinstance(other, str):
+            return self.value == other
+        return super().__eq__(other)
 
 
 class PrismatikClient:
@@ -84,10 +86,10 @@ class PrismatikClient:
         self._host = host
         self._port = port
         self._apikey = apikey
-        self._tcpreader = None
-        self._tcpwriter = None
         self._retries = CONNECTION_RETRY_ERRORS
         self._api_connected = False
+        self._tcpreader: Optional[asyncio.StreamReader] = None
+        self._tcpwriter: Optional[asyncio.StreamWriter] = None
 
     async def _connect(self) -> bool:
         """Connect to Prismatik server."""
@@ -103,6 +105,10 @@ class PrismatikClient:
                 )
             await self.disconnect()
         else:
+            if self._tcpreader is None or self._tcpwriter is None:
+                await self.disconnect()
+                return False
+
             # check header
             data = await self._tcpreader.readline()
             header = data.decode().strip()
@@ -115,7 +121,7 @@ class PrismatikClient:
     async def disconnect(self) -> None:
         """Disconnect from Prismatik server."""
         try:
-            if self._tcpwriter:
+            if self._tcpwriter is not None:
                 self._tcpwriter.close()
                 await self._tcpwriter.wait_closed()
         except OSError:
@@ -131,6 +137,8 @@ class PrismatikClient:
 
         _LOGGER.debug("SENDING: [%s]", buffer.strip())
         try:
+            if self._tcpwriter is None or self._tcpreader is None:
+                return None
             self._tcpwriter.write(buffer.encode())
             await self._tcpwriter.drain()
             await asyncio.sleep(0.01)

@@ -157,4 +157,5 @@ class PrismatikLight(CoordinatorEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._client.turn_off()
+        await self._client.unlock()
         await self.coordinator.async_request_refresh()

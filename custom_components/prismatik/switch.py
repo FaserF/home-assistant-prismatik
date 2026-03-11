@@ -59,6 +59,7 @@ class PrismatikMoodlightSwitch(CoordinatorEntity, SwitchEntity):
         if await self._client._set_cmd(
             PrismatikAPI.CMD_SET_MODE, PrismatikAPI.MOD_MOODLIGHT
         ):
+            await self._client.unlock()
             await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -73,7 +74,7 @@ class PrismatikMoodlightSwitch(CoordinatorEntity, SwitchEntity):
 
         if profile:
             await self._client.set_profile(profile)
-        else:
-            await self._client.unlock()
+
+        await self._client.unlock()
 
         await self.coordinator.async_request_refresh()

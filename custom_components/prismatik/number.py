@@ -75,6 +75,7 @@ class PrismatikGammaNumber(PrismatikNumber):
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         if await self._client.set_gamma(value):
+            await self._client.unlock()
             await self.coordinator.async_request_refresh()
 
 
@@ -101,4 +102,5 @@ class PrismatikSmoothnessNumber(PrismatikNumber):
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         if await self._client.set_smooth(int(value)):
+            await self._client.unlock()
             await self.coordinator.async_request_refresh()
