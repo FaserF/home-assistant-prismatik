@@ -49,5 +49,11 @@
             "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
             "unknown": "[%key:common::config_flow::error::unknown%]"
         }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "Legacy YAML configuration detected",
+            "description": "Prismatik YAML configuration is deprecated. Your configuration has been automatically imported into the UI. Please remove the `prismatik` configuration from your configuration.yaml file and restart Home Assistant to clear this issue."
+        }
     }
 }

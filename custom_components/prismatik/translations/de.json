@@ -1,0 +1,59 @@
+{
+    "title": "Prismatik",
+    "config": {
+        "flow_title": "Prismatik Konfiguration",
+        "step": {
+            "user": {
+                "title": "Prismatik",
+                "description": "Konfiguriere die Verbindungsdetails.",
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "api_key": "API-Schlüssel",
+                    "name": "Name",
+                    "profile_name": "Profilname"
+                }
+            }
+        },
+        "abort": {
+            "already_configured": "Gerät ist bereits konfiguriert",
+            "conn_error": "Verbindung fehlgeschlagen."
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_api_key": "Ungültiger API-Schlüssel",
+            "unknown": "Unbekannter Fehler"
+        }
+    },
+    "options": {
+        "flow_title": "Prismatik Konfiguration",
+        "step": {
+            "user": {
+                "title": "Prismatik",
+                "description": "Konfiguriere die Verbindungsdetails.",
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "api_key": "API-Schlüssel",
+                    "name": "Name",
+                    "profile_name": "Profilname"
+                }
+            }
+        },
+        "abort": {
+            "already_configured": "Gerät ist bereits konfiguriert",
+            "conn_error": "Verbindung fehlgeschlagen."
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_api_key": "Ungültiger API-Schlüssel",
+            "unknown": "Unbekannter Fehler"
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "Veraltete YAML-Konfiguration erkannt",
+            "description": "Die Prismatik YAML-Konfiguration ist veraltet. Deine Konfiguration wurde automatisch in die Benutzeroberfläche importiert. Bitte entferne die `prismatik`-Konfiguration aus deiner configuration.yaml Datei und starte Home Assistant neu, um dieses Problem zu beheben."
+        }
+    }
+}

@@ -1,71 +1,53 @@
-"""Prismatik light."""
+"""Prismatik light entity."""
 
 from typing import Any, Callable, Dict, List, Optional
 
-import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
-import voluptuous as vol
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
-    ATTR_EFFECT_LIST,
     ATTR_HS_COLOR,
     ColorMode,
     LightEntity,
     LightEntityFeature,
-    PLATFORM_SCHEMA,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
-    ATTR_STATE,
-    CONF_API_KEY,
-    CONF_HOST,
     CONF_NAME,
-    CONF_PORT,
-    CONF_PROFILE_NAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DEFAULT_ICON_OFF,
     DEFAULT_ICON_ON,
-    DEFAULT_NAME,
-    DEFAULT_PORT,
-    DEFAULT_PROFILE_NAME,
     DOMAIN,
 )
-
-from .prismatik import PrismatikClient
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PROFILE_NAME, default=DEFAULT_PROFILE_NAME): cv.string,
-    }
-)
+from .coordinator import PrismatikDataUpdateCoordinator
 
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: Dict,
+    config: Dict[str, Any],
     async_add_entities: Callable[[List[LightEntity], bool], None],
     discovery_info: Optional[Any] = None,
 ) -> None:
-    """Set up the Prismatik Light platform."""
-    # pylint: disable=unused-argument
-
-    client = PrismatikClient(
-        config[CONF_HOST], config[CONF_PORT], config.get(CONF_API_KEY)
+    """Set up the Prismatik Light platform from legacy YAML (deprecated)."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
     )
-    light = PrismatikLight(
-        hass, config[CONF_NAME], client, config.get(CONF_PROFILE_NAME)
-    )
-    await light.async_update()
 
-    async_add_entities([light])
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
 
 
 async def async_setup_entry(
@@ -73,113 +55,89 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: Callable[[List[LightEntity], bool], None],
 ) -> None:
-    """Set up the Prismatik Light from integration."""
-    config = hass.data[DOMAIN][config_entry.entry_id]
-    if config_entry.options:
-        config.update(config_entry.options)
-    client = PrismatikClient(
-        config[CONF_HOST], config[CONF_PORT], config.get(CONF_API_KEY)
-    )
-    light = PrismatikLight(
-        hass, config[CONF_NAME], client, config.get(CONF_PROFILE_NAME)
-    )
-    await light.async_update()
+    """Set up the Prismatik Light from a config entry."""
+    data = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = data["coordinator"]
+    config = data["config"]
 
-    async_add_entities([light])
+    async_add_entities([PrismatikLight(coordinator, config[CONF_NAME], config)], True)
 
 
-class PrismatikLight(LightEntity):
-    """Representation of Prismatik."""
+class PrismatikLight(CoordinatorEntity, LightEntity):
+    """Representation of a Prismatik light."""
 
     def __init__(
         self,
-        hass: HomeAssistant,
+        coordinator: PrismatikDataUpdateCoordinator,
         name: str,
-        client: PrismatikClient,
-        profile: Optional[str],
+        config: Dict[str, Any],
     ) -> None:
-        """Intialize."""
-        self._hass = hass
+        """Initialize the light."""
+        super().__init__(coordinator)
         self._name = name
-        self._client = client
-        self._profile = profile
+        self._client = coordinator.client
+        self._profile = config.get("profile_name")
 
         host = self._client.host.replace(".", "_")
-        self._unique_id = f"{host}_{self._client.port}"
-
+        self._attr_unique_id = f"{host}_{self._client.port}"
+        self._attr_name = name
         self._attr_color_mode = ColorMode.HS
-        self._attr_supported_color_modes = set({ColorMode.HS})
+        self._attr_supported_color_modes = {ColorMode.HS}
         self._attr_supported_features = LightEntityFeature.EFFECT
 
-        self._state = {
-            ATTR_STATE: False,
-            ATTR_EFFECT: None,
-            ATTR_EFFECT_LIST: None,
-            ATTR_BRIGHTNESS: None,
-            ATTR_HS_COLOR: None,
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, self._attr_unique_id)},
+            "name": name,
+            "manufacturer": "Prismatik",
+            "model": "Ambient Light",
+            "configuration_url": f"http://{self._client.host}:{self._client.port}",
         }
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect from update signal."""
-        await self._client.disconnect()
-
-    @property
-    def hs_color(self) -> Optional[List]:
-        """Return the hue and saturation color value [float, float]."""
-        return self._state[ATTR_HS_COLOR]
-
-    @property
-    def name(self) -> str:
-        """Return the name of the light."""
-        return self._name
-
-    @property
-    def available(self) -> bool:
-        """Return availability of the light."""
-        return self._client.is_connected
 
     @property
     def is_on(self) -> bool:
-        """Return light status."""
-        return self._state[ATTR_STATE]
-
-    @property
-    def icon(self) -> str:
-        """Light icon."""
-        return DEFAULT_ICON_ON if self.available else DEFAULT_ICON_OFF
-
-    @property
-    def unique_id(self) -> str:
-        """Unique ID."""
-        return self._unique_id
+        """Return true if light is on."""
+        return self.coordinator.data.get("is_on", False)
 
     @property
     def brightness(self) -> Optional[int]:
-        """Return the brightness of this light between 0..255."""
-        return self._state[ATTR_BRIGHTNESS]
+        """Return the brightness of this light."""
+        return self.coordinator.data.get("brightness")
 
     @property
-    def effect_list(self) -> Optional[List]:
-        """Return profile list."""
-        return self._state[ATTR_EFFECT_LIST]
+    def hs_color(self) -> Optional[tuple]:
+        """Return the hs color value."""
+        return self.coordinator.data.get("hs_color")
+
+    @property
+    def effect_list(self) -> Optional[List[str]]:
+        """Return the list of supported effects."""
+        return self.coordinator.data.get("profiles")
 
     @property
     def effect(self) -> Optional[str]:
-        """Return current profile."""
-        return self._state[ATTR_EFFECT]
+        """Return the current effect."""
+        return self.coordinator.data.get("profile")
 
-    async def async_update(self) -> None:
-        """Update light state."""
-        self._state[ATTR_STATE] = await self._client.is_on()
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.last_update_success and self._client.is_connected
 
-        self._state[ATTR_EFFECT] = await self._client.get_profile()
-        self._state[ATTR_EFFECT_LIST] = await self._client.get_profiles()
+    @property
+    def icon(self) -> str:
+        """Return the icon to use in the frontend."""
+        return DEFAULT_ICON_ON if self.available else DEFAULT_ICON_OFF
 
-        brightness = await self._client.get_brightness()
-        self._state[ATTR_BRIGHTNESS] = round(brightness * 2.55) if brightness else None
-
-        rgb = await self._client.get_color()
-        self._state[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb) if rgb else None
+    @property
+    def extra_state_attributes(self) -> Dict[str, Any]:
+        """Return extra state attributes."""
+        return {
+            "led_count": self.coordinator.data.get("led_count"),
+            "gamma": self.coordinator.data.get("gamma"),
+            "smoothness": self.coordinator.data.get("smoothness"),
+            "api_status": self.coordinator.data.get("api_status"),
+            "mode": self.coordinator.data.get("mode"),
+        }
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
@@ -194,8 +152,9 @@ class PrismatikLight(LightEntity):
             rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
             await self._client.set_color(rgb, self._profile)
         await self._client.unlock()
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        # pylint: disable=unused-argument
         await self._client.turn_off()
+        await self.coordinator.async_request_refresh()

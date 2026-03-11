@@ -96,6 +96,14 @@ class PrismatikConfigFlow(PrismatikFlow, config_entries.ConfigFlow, domain=DOMAI
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
         self._is_import = True
+        if user_input is not None:
+            # Duplicate detection based on host and port
+            for entry in self._async_current_entries():
+                if entry.data.get(CONF_HOST) == user_input.get(
+                    CONF_HOST
+                ) and entry.data.get(CONF_PORT) == user_input.get(CONF_PORT):
+                    return self.async_abort(reason="already_configured")
+
         return await self.async_step_user(user_input)
 
     def _async_create_entry(self, title, data):

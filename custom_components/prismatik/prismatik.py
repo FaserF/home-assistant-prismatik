@@ -43,6 +43,14 @@ class PrismatikAPI(Enum):
     CMD_GET_MODE = "mode"
     CMD_SET_MODE = CMD_GET_MODE
 
+    CMD_GET_GAMMA = "gamma"
+    CMD_SET_GAMMA = CMD_GET_GAMMA
+
+    CMD_GET_SMOOTH = "smooth"
+    CMD_SET_SMOOTH = CMD_GET_SMOOTH
+
+    CMD_GET_STATUS_API = "statusapi"
+
     AWR_OK = "ok"
     AWR_SUCCESS = "success"
     AWR_NOT_LOCKED = "not locked"
@@ -286,3 +294,25 @@ class PrismatikClient:
         ):
             return False
         return await self._set_cmd(PrismatikAPI.CMD_SET_PROFILE, profile)
+
+    async def get_api_status(self) -> Optional[str]:
+        """Get API status (busy/idle)."""
+        return await self._get_cmd(PrismatikAPI.CMD_GET_STATUS_API)
+
+    async def get_gamma(self) -> Optional[float]:
+        """Get gamma value."""
+        gamma = await self._get_cmd(PrismatikAPI.CMD_GET_GAMMA)
+        return float(gamma) if gamma is not None else None
+
+    async def set_gamma(self, gamma: float) -> bool:
+        """Set gamma value."""
+        return await self._set_cmd(PrismatikAPI.CMD_SET_GAMMA, gamma)
+
+    async def get_smooth(self) -> Optional[int]:
+        """Get smoothness value."""
+        smooth = await self._get_cmd(PrismatikAPI.CMD_GET_SMOOTH)
+        return int(smooth) if smooth is not None else None
+
+    async def set_smooth(self, smooth: int) -> bool:
+        """Set smoothness value."""
+        return await self._set_cmd(PrismatikAPI.CMD_SET_SMOOTH, smooth)
