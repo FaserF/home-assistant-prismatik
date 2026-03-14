@@ -1,0 +1,59 @@
+{
+    "title": "Prismatik",
+    "config": {
+        "flow_title": "Prismatik Konfiguration",
+        "step": {
+            "user": {
+                "title": "Prismatik",
+                "description": "Konfiguriere die Verbindungsdetails.",
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "api_key": "API-Schlüssel",
+                    "name": "Name",
+                    "profile_name": "Profilname"
+                }
+            }
+        },
+        "abort": {
+            "already_configured": "Gerät ist bereits konfiguriert",
+            "conn_error": "Verbindung fehlgeschlagen."
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_api_key": "Ungültiger API-Schlüssel",
+            "unknown": "Unbekannter Fehler"
+        }
+    },
+    "options": {
+        "flow_title": "Prismatik Konfiguration",
+        "step": {
+            "user": {
+                "title": "Prismatik",
+                "description": "Konfiguriere die Verbindungsdetails.",
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "api_key": "API-Schlüssel",
+                    "name": "Name",
+                    "profile_name": "Profilname"
+                }
+            }
+        },
+        "abort": {
+            "already_configured": "Gerät ist bereits konfiguriert",
+            "conn_error": "Verbindung fehlgeschlagen."
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_api_key": "Ungültiger API-Schlüssel",
+            "unknown": "Unbekannter Fehler"
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "Veraltete YAML-Konfiguration erkannt",
+            "description": "Die Prismatik YAML-Konfiguration in deiner `configuration.yaml` ist veraltet und wurde automatisch in die Benutzeroberfläche importiert. Du kannst den `prismatik`-Abschnitt nun sicher aus deiner YAML-Datei entfernen und Home Assistant neu starten, um diese Meldung zu löschen."
+        }
+    }
+}

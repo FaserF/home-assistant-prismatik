@@ -1,24 +1,20 @@
 """Config flow for Prismatik integration."""
+
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, exceptions
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
-    CONF_PROFILE_NAME
+    CONF_PROFILE_NAME,
 )
 from homeassistant.core import callback
 
-from .const import (
-    DEFAULT_NAME,
-    DEFAULT_PORT,
-    DEFAULT_PROFILE_NAME,
-    DOMAIN
-)
+from .const import DEFAULT_NAME, DEFAULT_PORT, DEFAULT_PROFILE_NAME, DOMAIN
 
-from .light import PrismatikClient
+from .prismatik import PrismatikClient
 
 
 async def validate_input(data):
@@ -26,11 +22,7 @@ async def validate_input(data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    client = PrismatikClient(
-        data[CONF_HOST],
-        data[CONF_PORT],
-        data[CONF_API_KEY]
-    )
+    client = PrismatikClient(data[CONF_HOST], data[CONF_PORT], data[CONF_API_KEY])
     await client.is_on()
     if not client.is_reachable:
         raise CannotConnect
@@ -38,7 +30,7 @@ async def validate_input(data):
         raise InvalidApiKey
 
 
-class PrismatikFlow: # pylint: disable=too-few-public-methods
+class PrismatikFlow:  # pylint: disable=too-few-public-methods
     """Prismatik Flow."""
 
     def __init__(self):
@@ -80,7 +72,7 @@ class PrismatikFlow: # pylint: disable=too-few-public-methods
                 vol.Optional(CONF_PORT, default=self._port): int,
                 vol.Optional(CONF_API_KEY, default=self._apikey): str,
                 vol.Optional(CONF_NAME, default=self._name): str,
-                vol.Optional(CONF_PROFILE_NAME, default=self._profile_name): str
+                vol.Optional(CONF_PROFILE_NAME, default=self._profile_name): str,
             }
         )
         return self._async_show_form(
@@ -95,7 +87,7 @@ class PrismatikFlow: # pylint: disable=too-few-public-methods
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class PrismatikConfigFlow(PrismatikFlow, config_entries.ConfigFlow, domain=DOMAIN):
+class PrismatikConfigFlow(PrismatikFlow, config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]
     """Handle a config flow for Prismatik."""
 
     VERSION = 1
@@ -104,13 +96,23 @@ class PrismatikConfigFlow(PrismatikFlow, config_entries.ConfigFlow, domain=DOMAI
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
         self._is_import = True
+        if user_input is not None:
+            # Duplicate detection based on host and port
+            for entry in self._async_current_entries():
+                if entry.data.get(CONF_HOST) == user_input.get(
+                    CONF_HOST
+                ) and entry.data.get(CONF_PORT) == user_input.get(CONF_PORT):
+                    return self.async_abort(reason="already_configured")
+
         return await self.async_step_user(user_input)
 
     def _async_create_entry(self, title, data):
         return self.async_create_entry(title=title, data=data)
 
     def _async_show_form(self, step_id, data_schema, errors):
-        return self.async_show_form(step_id=step_id, data_schema=data_schema, errors=errors)
+        return self.async_show_form(
+            step_id=step_id, data_schema=data_schema, errors=errors
+        )
 
     @staticmethod
     @callback
@@ -118,17 +120,34 @@ class PrismatikConfigFlow(PrismatikFlow, config_entries.ConfigFlow, domain=DOMAI
         """Options flow."""
         return PrismatikOptionsFlowHandler(config_entry)
 
+
 class PrismatikOptionsFlowHandler(PrismatikFlow, config_entries.OptionsFlow):
     """Prismatik config flow options handler."""
 
     def __init__(self, config_entry):
         """Initialize options flow."""
         super().__init__()
-        self._host = config_entry.data[CONF_HOST] if CONF_HOST in config_entry.data else None
-        self._port = config_entry.data[CONF_PORT] if CONF_PORT in config_entry.data else DEFAULT_PORT
-        self._name = config_entry.data[CONF_NAME] if CONF_NAME in config_entry.data else DEFAULT_NAME
-        self._profile_name = config_entry.data[CONF_PROFILE_NAME] if CONF_PROFILE_NAME in config_entry.data else DEFAULT_PROFILE_NAME
-        self._apikey = config_entry.data[CONF_API_KEY] if CONF_API_KEY in config_entry.data else ""
+        self._host = (
+            config_entry.data[CONF_HOST] if CONF_HOST in config_entry.data else None
+        )
+        self._port = (
+            config_entry.data[CONF_PORT]
+            if CONF_PORT in config_entry.data
+            else DEFAULT_PORT
+        )
+        self._name = (
+            config_entry.data[CONF_NAME]
+            if CONF_NAME in config_entry.data
+            else DEFAULT_NAME
+        )
+        self._profile_name = (
+            config_entry.data[CONF_PROFILE_NAME]
+            if CONF_PROFILE_NAME in config_entry.data
+            else DEFAULT_PROFILE_NAME
+        )
+        self._apikey = (
+            config_entry.data[CONF_API_KEY] if CONF_API_KEY in config_entry.data else ""
+        )
 
     async def async_step_init(self, user_input=None):  # pylint: disable=unused-argument
         """Manage the options."""
@@ -138,12 +157,14 @@ class PrismatikOptionsFlowHandler(PrismatikFlow, config_entries.OptionsFlow):
         return self.async_create_entry(title=title, data=data)
 
     def _async_show_form(self, step_id, data_schema, errors):
-        return self.async_show_form(step_id=step_id, data_schema=data_schema, errors=errors)
+        return self.async_show_form(
+            step_id=step_id, data_schema=data_schema, errors=errors
+        )
 
 
-class CannotConnect(exceptions.HomeAssistantError): # pylint: disable=too-few-public-methods
+class CannotConnect(exceptions.HomeAssistantError):  # pylint: disable=too-few-public-methods
     """Error to indicate we cannot connect."""
 
 
-class InvalidApiKey(exceptions.HomeAssistantError): # pylint: disable=too-few-public-methods
+class InvalidApiKey(exceptions.HomeAssistantError):  # pylint: disable=too-few-public-methods
     """Error to indicate there is invalid API Key."""
