@@ -94,10 +94,10 @@ class PrismatikClient:
     async def _connect(self) -> bool:
         """Connect to Prismatik server."""
         try:
-            self._tcpreader, self._tcpwriter = await asyncio.open_connection(
-                self._host, self._port
+            self._tcpreader, self._tcpwriter = await asyncio.wait_for(
+                asyncio.open_connection(self._host, self._port), timeout=5.0
             )
-        except (ConnectionRefusedError, TimeoutError, OSError):
+        except (ConnectionRefusedError, asyncio.TimeoutError, OSError):
             if self._retries > 0:
                 self._retries -= 1
                 _LOGGER.error(
@@ -110,7 +110,13 @@ class PrismatikClient:
                 return False
 
             # check header
-            data = await self._tcpreader.readline()
+            try:
+                data = await asyncio.wait_for(self._tcpreader.readline(), timeout=2.0)
+            except asyncio.TimeoutError:
+                _LOGGER.error("Timeout waiting for Prismatik API header")
+                await self.disconnect()
+                return False
+
             header = data.decode().strip()
             _LOGGER.debug("GOT HEADER: %s", header)
             if not header.startswith(str(PrismatikAPI.AWR_HEADER)):
@@ -141,8 +147,12 @@ class PrismatikClient:
                 return None
             self._tcpwriter.write(buffer.encode())
             await self._tcpwriter.drain()
-            await asyncio.sleep(0.01)
-            data = await self._tcpreader.readline()
+            try:
+                data = await asyncio.wait_for(self._tcpreader.readline(), timeout=2.0)
+            except asyncio.TimeoutError:
+                _LOGGER.error("Timeout waiting for Prismatik response")
+                await self.disconnect()
+                return None
             answer = data.decode().strip()
         except OSError:
             if self._retries > 0:

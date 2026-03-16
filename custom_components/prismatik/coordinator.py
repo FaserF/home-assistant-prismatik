@@ -1,5 +1,6 @@
 """DataUpdateCoordinator for Prismatik integration."""
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Any, Dict
@@ -34,16 +35,30 @@ class PrismatikDataUpdateCoordinator(DataUpdateCoordinator):
             if not self.client.is_reachable:
                 await self.client.disconnect()  # Reset connection if not reachable
 
-            is_on = await self.client.is_on()
-            profile = await self.client.get_profile()
-            profiles = await self.client.get_profiles()
-            brightness = await self.client.get_brightness()
-            rgb = await self.client.get_color()
-            led_count = await self.client.leds()
-            gamma = await self.client.get_gamma()
-            smooth = await self.client.get_smooth()
-            status_api = await self.client.get_api_status()
-            mode = await self.client._get_cmd(PrismatikAPI.CMD_GET_MODE)
+            # Fetch all data in parallel
+            (
+                is_on,
+                profile,
+                profiles,
+                brightness,
+                rgb,
+                led_count,
+                gamma,
+                smooth,
+                status_api,
+                mode,
+            ) = await asyncio.gather(
+                self.client.is_on(),
+                self.client.get_profile(),
+                self.client.get_profiles(),
+                self.client.get_brightness(),
+                self.client.get_color(),
+                self.client.leds(),
+                self.client.get_gamma(),
+                self.client.get_smooth(),
+                self.client.get_api_status(),
+                self.client._get_cmd(PrismatikAPI.CMD_GET_MODE),
+            )
 
             return {
                 "is_on": is_on,
