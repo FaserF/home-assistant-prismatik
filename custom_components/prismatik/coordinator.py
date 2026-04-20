@@ -49,9 +49,9 @@ class PrismatikDataUpdateCoordinator(DataUpdateCoordinator):
                 "is_on": is_on,
                 "profile": profile,
                 "profiles": profiles,
-                "brightness": round(brightness * 2.55)
-                if brightness is not None
-                else None,
+                "brightness": (
+                    round(brightness * 2.55) if brightness is not None else None
+                ),
                 "hs_color": color_util.color_RGB_to_hs(*rgb) if rgb else None,
                 "led_count": led_count,
                 "gamma": gamma,

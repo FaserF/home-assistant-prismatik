@@ -162,9 +162,13 @@ class PrismatikOptionsFlowHandler(PrismatikFlow, config_entries.OptionsFlow):
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):  # pylint: disable=too-few-public-methods
+class CannotConnect(
+    exceptions.HomeAssistantError
+):  # pylint: disable=too-few-public-methods
     """Error to indicate we cannot connect."""
 
 
-class InvalidApiKey(exceptions.HomeAssistantError):  # pylint: disable=too-few-public-methods
+class InvalidApiKey(
+    exceptions.HomeAssistantError
+):  # pylint: disable=too-few-public-methods
     """Error to indicate there is invalid API Key."""
