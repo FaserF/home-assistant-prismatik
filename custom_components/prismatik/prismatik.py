@@ -135,7 +135,11 @@ class PrismatikClient:
         if self._tcpwriter is None and (await self._connect()) is False:
             return None
 
-        _LOGGER.debug("SENDING: [%s]", buffer.strip())
+        log_buffer = buffer.strip()
+        if log_buffer.startswith(str(PrismatikAPI.CMD_APIKEY)):
+            log_buffer = f"{PrismatikAPI.CMD_APIKEY}:********"
+
+        _LOGGER.debug("SENDING: [%s]", log_buffer)
         try:
             if self._tcpwriter is None or self._tcpreader is None:
                 return None
