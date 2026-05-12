@@ -5,9 +5,6 @@ on:
   #   branches: [ 'feature/ci' ]
   # pull_request:
   #   branches: [ master ]
-  schedule:
-    - cron: '0 0 * * *'
-
 jobs:
   test_vs_hass:
     runs-on: ubuntu-20.04
