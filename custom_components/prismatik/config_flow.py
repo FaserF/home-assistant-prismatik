@@ -23,7 +23,10 @@ async def validate_input(data):
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     client = PrismatikClient(data[CONF_HOST], data[CONF_PORT], data[CONF_API_KEY])
-    await client.is_on()
+    try:
+        await client.is_on()
+    except OSError as err:
+        raise CannotConnect from err
     if not client.is_reachable:
         raise CannotConnect
     if not client.is_connected:
@@ -162,13 +165,9 @@ class PrismatikOptionsFlowHandler(PrismatikFlow, config_entries.OptionsFlow):
         )
 
 
-class CannotConnect(
-    exceptions.HomeAssistantError
-):  # pylint: disable=too-few-public-methods
+class CannotConnect(exceptions.HomeAssistantError):  # pylint: disable=too-few-public-methods
     """Error to indicate we cannot connect."""
 
 
-class InvalidApiKey(
-    exceptions.HomeAssistantError
-):  # pylint: disable=too-few-public-methods
+class InvalidApiKey(exceptions.HomeAssistantError):  # pylint: disable=too-few-public-methods
     """Error to indicate there is invalid API Key."""

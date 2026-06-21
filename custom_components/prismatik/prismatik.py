@@ -94,9 +94,21 @@ class PrismatikClient:
     async def _connect(self) -> bool:
         """Connect to Prismatik server."""
         try:
-            self._tcpreader, self._tcpwriter = await asyncio.open_connection(
-                self._host, self._port
-            )
+            async with asyncio.timeout(5.0):
+                self._tcpreader, self._tcpwriter = await asyncio.open_connection(
+                    self._host, self._port
+                )
+                if self._tcpreader is None or self._tcpwriter is None:
+                    await self.disconnect()
+                    return False
+
+                # check header
+                data = await self._tcpreader.readline()
+                header = data.decode().strip()
+                _LOGGER.debug("GOT HEADER: %s", header)
+                if not header.startswith(str(PrismatikAPI.AWR_HEADER)):
+                    _LOGGER.error("Bad API header")
+                    await self.disconnect()
         except (ConnectionRefusedError, TimeoutError, OSError):
             if self._retries > 0:
                 self._retries -= 1
@@ -104,18 +116,6 @@ class PrismatikClient:
                     "Could not connect to Prismatik at %s:%s", self._host, self._port
                 )
             await self.disconnect()
-        else:
-            if self._tcpreader is None or self._tcpwriter is None:
-                await self.disconnect()
-                return False
-
-            # check header
-            data = await self._tcpreader.readline()
-            header = data.decode().strip()
-            _LOGGER.debug("GOT HEADER: %s", header)
-            if not header.startswith(str(PrismatikAPI.AWR_HEADER)):
-                _LOGGER.error("Bad API header")
-                await self.disconnect()
         return self._tcpwriter is not None
 
     async def disconnect(self) -> None:
@@ -133,7 +133,7 @@ class PrismatikClient:
     async def _send(self, buffer: str) -> Optional[str]:
         """Send command to Prismatik server."""
         if self._tcpwriter is None and (await self._connect()) is False:
-            return None
+            raise OSError("Could not connect to Prismatik server")
 
         log_buffer = buffer.strip()
         if log_buffer.startswith(str(PrismatikAPI.CMD_APIKEY)):
@@ -142,18 +142,19 @@ class PrismatikClient:
         _LOGGER.debug("SENDING: [%s]", log_buffer)
         try:
             if self._tcpwriter is None or self._tcpreader is None:
-                return None
-            self._tcpwriter.write(buffer.encode())
-            await self._tcpwriter.drain()
-            await asyncio.sleep(0.01)
-            data = await self._tcpreader.readline()
-            answer = data.decode().strip()
-        except OSError:
+                raise OSError("Connection closed")
+            async with asyncio.timeout(5.0):
+                self._tcpwriter.write(buffer.encode())
+                await self._tcpwriter.drain()
+                await asyncio.sleep(0.01)
+                data = await self._tcpreader.readline()
+            answer: Optional[str] = data.decode().strip()
+        except (OSError, TimeoutError) as err:
             if self._retries > 0:
                 self._retries -= 1
                 _LOGGER.error("Prismatik went away?")
             await self.disconnect()
-            answer = None
+            raise OSError(f"Communication error: {err}") from err
         else:
             self._retries = CONNECTION_RETRY_ERRORS
             _LOGGER.debug("RECEIVED: [%s]", answer)
