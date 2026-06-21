@@ -1,80 +1,144 @@
-name: Report an issue
-description: Report an issue with the Home Assistant Prismatik Integration
-title: "[Bug]: "
-labels: ["bug"]
+name: Bug Report
+description: Report a bug with the Prismatik ambilight integration
+title: '[Bug]: '
+labels: ['bug', 'triage']
 assignees:
   - FaserF
 body:
   - type: markdown
     attributes:
       value: |
-        This issue form is for reporting bugs only!
+        ## Before submitting
+        - 🔍 Search [existing issues](https://github.com/FaserF/home-assistant-prismatik/issues) to avoid duplicates
+        - 📖 Check the [documentation](https://github.com/FaserF/home-assistant-prismatik/blob/master/README.md)
+        - 🔗 View the integration: [![Open your Home Assistant instance and show the prismatik integration.](https://my.home-assistant.io/badges/integration.svg)](https://my.home-assistant.io/redirect/integration/?domain=prismatik)
 
-        If you have a feature or enhancement request, please use the feature request template!
-  - type: textarea
-    validations:
-      required: true
-    attributes:
-      label: The problem
-      description: >-
-        Describe the issue you are experiencing here.
-        Provide a clear and concise description of what the problem is.
-  - type: markdown
-    attributes:
-      value: |
-        ## Environment
   - type: input
-    id: version
+    id: integration_version
+    attributes:
+      label: Integration Version
+      description: Which version of home-assistant-prismatik are you running? (HACS or integration page)
+      placeholder: e.g. v1.2.0
     validations:
       required: true
-    attributes:
-      label: What version of Home Assistant Core has the issue?
-      placeholder: core-
-      description: >
-        Can be found in: [Settings -> About](https://my.home-assistant.io/redirect/info/).
 
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant Version
+      description: |
         [![Open your Home Assistant instance and show your Home Assistant version information.](https://my.home-assistant.io/badges/info.svg)](https://my.home-assistant.io/redirect/info/)
+      placeholder: e.g. 2025.6.0
+    validations:
+      required: true
+
   - type: dropdown
-    validations:
-      required: true
+    id: ha_install_type
     attributes:
-      label: What type of installation are you running?
-      description: >
-        Can be found in: [Settings -> About](https://my.home-assistant.io/redirect/info/).
-
-        [![Open your Home Assistant instance and show your Home Assistant version information.](https://my.home-assistant.io/badges/info.svg)](https://my.home-assistant.io/redirect/info/)
+      label: Home Assistant Installation Type
+      description: |
+        Can be found in: [![Open your Home Assistant instance and show your Home Assistant version information.](https://my.home-assistant.io/badges/info.svg)](https://my.home-assistant.io/redirect/info/)
       options:
         - Home Assistant OS
         - Home Assistant Container
         - Home Assistant Supervised
         - Home Assistant Core
-  - type: input
-    id: version_integration
     validations:
       required: true
+
+  - type: input
+    id: prismatik_version
     attributes:
-      label: What version of this Integration has the issue?
-      placeholder:
-      description: >
-        The version from the release page you are using. Latest version can be found here: https://github.com/FaserF/home-assistant-prismatik/releases/latest
-  - type: markdown
+      label: Prismatik Version
+      description: Which version of Prismatik software are you running?
+      placeholder: e.g. 5.11.2.37
+    validations:
+      required: true
+
+  - type: dropdown
+    id: prismatik_os
     attributes:
-      value: |
-        # Details
+      label: Operating System Running Prismatik
+      description: What OS is Prismatik running on?
+      options:
+        - Windows
+        - Linux
+        - macOS
+    validations:
+      required: true
+
+  - type: dropdown
+    id: connection_method
+    attributes:
+      label: Connection Method
+      description: How is Home Assistant connecting to Prismatik?
+      options:
+        - Local network (same host)
+        - Remote host (different machine)
+    validations:
+      required: true
+
+  - type: input
+    id: led_controller
+    attributes:
+      label: LED Controller Type
+      description: What LED controller/device are you using with Prismatik? (optional)
+      placeholder: e.g. Adalight, Arduino, WLED
+    validations:
+      required: false
+
   - type: textarea
+    id: description
     attributes:
-      label: Example YAML snippet
+      label: Describe the Bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Step-by-step instructions to reproduce the behavior.
+      placeholder: |
+        1. Configure integration with '...'
+        2. Turn on / change brightness to '...'
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
       description: |
-        If applicable, please provide an example piece of YAML that can help reproduce this problem.
-        This can be from an automation, script, scene or configuration.
-      render: yaml
+        Download diagnostics from the integration page and paste here (very helpful!):
+        [![Open your Home Assistant instance and show the prismatik integration.](https://my.home-assistant.io/badges/integration.svg)](https://my.home-assistant.io/redirect/integration/?domain=prismatik)
+      render: json
+    validations:
+      required: false
+
   - type: textarea
+    id: logs
     attributes:
-      label: Anything in the logs that might be useful for us?
-      description: For example, error message, or stack traces.
-      render: txt
-  - type: textarea
-    attributes:
-      label: Additional information
-      description: >
-        If you have any additional information for us, use the field below.
+      label: Relevant Log Output
+      description: |
+        Enable debug logging and paste relevant log lines here.
+        Add to `configuration.yaml`:
+        ```yaml
+        logger:
+          default: warning
+          logs:
+            custom_components.prismatik: debug
+        ```
+      render: shell
+    validations:
+      required: true

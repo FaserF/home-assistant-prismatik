@@ -1,39 +1,63 @@
-name: Feature request
-description: Suggest an idea for this integration
-title: "[Feature Request]: "
-labels: ["enhancement"]
+name: Feature Request
+description: Suggest an idea or enhancement for the Prismatik ambilight integration
+title: '[Feature]: '
+labels: ['enhancement', 'triage']
 assignees:
   - FaserF
 body:
   - type: markdown
     attributes:
       value: |
-        This feature request request form is for feature requests only!
+        ## Before submitting
+        - 🔍 Search [existing feature requests](https://github.com/FaserF/home-assistant-prismatik/issues?q=label%3Aenhancement) to avoid duplicates
+        - 📖 Check the [documentation](https://github.com/FaserF/home-assistant-prismatik/blob/master/README.md)
+        - 🔗 View the integration: [![Open your Home Assistant instance and show the prismatik integration.](https://my.home-assistant.io/badges/integration.svg)](https://my.home-assistant.io/redirect/integration/?domain=prismatik)
 
-        If you have a bug or issue request, please use the bug report template!
   - type: textarea
+    id: problem
+    attributes:
+      label: Problem Description
+      description: Is your feature request related to a problem? Describe it clearly.
+      placeholder: "I'm always frustrated when..."
     validations:
       required: true
-    attributes:
-      label: The request
-      description: >-
-        A clear and concise description of what you want to happen.
-  - type: markdown
-    attributes:
-      value: |
-        ## Environment
-  - type: markdown
-    attributes:
-      value: |
-        # Details
+
   - type: textarea
+    id: solution
     attributes:
-      label: Is your feature request related to a problem?
-      render: txt
-      description: >-
-        A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+      label: Proposed Solution
+      description: A clear and concise description of what you want to happen.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: feature_area
+    attributes:
+      label: Feature Area
+      description: Which area of the integration does this feature relate to?
+      options:
+        - Light effect / profile switching
+        - Brightness / color control
+        - Connection / network handling
+        - Mode management (ambilight / static)
+        - LED device support
+        - Sensor / entity improvements
+        - Other
+    validations:
+      required: true
+
   - type: textarea
+    id: alternatives
     attributes:
-      label: Additional information
-      description: >
-        If you have any additional information for us, use the field below.
+      label: Alternatives Considered
+      description: Describe any alternative solutions or features you've considered.
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Add any other context, screenshots, or examples about the feature request here.
+    validations:
+      required: false
