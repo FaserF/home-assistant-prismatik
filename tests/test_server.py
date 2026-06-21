@@ -87,7 +87,7 @@ try:
         resp = globals()[req]()
         # print(resp.strip())
         client.sendall(resp.encode())
-except:  # pylint: disable=bare-except
+except Exception:  # pylint: disable=bare-except
     pass
 finally:
     s.close()
