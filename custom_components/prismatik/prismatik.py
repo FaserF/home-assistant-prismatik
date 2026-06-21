@@ -136,8 +136,8 @@ class PrismatikClient:
             raise OSError("Could not connect to Prismatik server")
 
         log_buffer = buffer.strip()
-        if log_buffer.startswith(str(PrismatikAPI.CMD_APIKEY)):
-            log_buffer = f"{PrismatikAPI.CMD_APIKEY}:********"
+        if log_buffer.startswith(PrismatikAPI.CMD_APIKEY.value):
+            log_buffer = f"{PrismatikAPI.CMD_APIKEY.value}:********"
 
         _LOGGER.debug("SENDING: [%s]", log_buffer)
         try:
