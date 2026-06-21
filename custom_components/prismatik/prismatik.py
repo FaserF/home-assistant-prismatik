@@ -90,11 +90,18 @@ class PrismatikClient:
         self._api_connected = False
         self._tcpreader: Optional[asyncio.StreamReader] = None
         self._tcpwriter: Optional[asyncio.StreamWriter] = None
+        self._last_connect_time = 0.0
 
     async def _connect(self) -> bool:
         """Connect to Prismatik server."""
+        import time
+
+        now = time.time()
+        if now - self._last_connect_time < 5.0:
+            return False
+        self._last_connect_time = now
         try:
-            async with asyncio.timeout(5.0):
+            async with asyncio.timeout(2.0):
                 self._tcpreader, self._tcpwriter = await asyncio.open_connection(
                     self._host, self._port
                 )
