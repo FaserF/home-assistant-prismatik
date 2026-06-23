@@ -101,7 +101,7 @@ class PrismatikClient:
             return False
         self._last_connect_time = now
         try:
-            async with asyncio.timeout(2.0):
+            async with asyncio.timeout(1.0):
                 self._tcpreader, self._tcpwriter = await asyncio.open_connection(
                     self._host, self._port
                 )
