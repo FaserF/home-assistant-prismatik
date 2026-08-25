@@ -1,6 +1,7 @@
 """Prismatik light entity."""
 
-from typing import Any, Callable, Dict, List, Optional
+from collections.abc import Callable
+from typing import Any
 
 import homeassistant.util.color as color_util
 from homeassistant.components.light import (
@@ -29,9 +30,9 @@ from .coordinator import PrismatikDataUpdateCoordinator
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: Dict[str, Any],
-    async_add_entities: Callable[[List[LightEntity], bool], None],
-    discovery_info: Optional[Any] = None,
+    config: dict[str, Any],
+    async_add_entities: Callable[[list[LightEntity], bool], None],
+    discovery_info: Any | None = None,
 ) -> None:
     """Set up the Prismatik Light platform from legacy YAML (deprecated)."""
     ir.async_create_issue(
@@ -53,7 +54,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[List[LightEntity], bool], None],
+    async_add_entities: Callable[[list[LightEntity], bool], None],
 ) -> None:
     """Set up the Prismatik Light from a config entry."""
     data = hass.data[DOMAIN][config_entry.entry_id]
@@ -70,7 +71,7 @@ class PrismatikLight(CoordinatorEntity, LightEntity):
         self,
         coordinator: PrismatikDataUpdateCoordinator,
         name: str,
-        config: Dict[str, Any],
+        config: dict[str, Any],
     ) -> None:
         """Initialize the light."""
         super().__init__(coordinator)
@@ -99,22 +100,22 @@ class PrismatikLight(CoordinatorEntity, LightEntity):
         return self.coordinator.data.get("is_on", False)
 
     @property
-    def brightness(self) -> Optional[int]:
+    def brightness(self) -> int | None:
         """Return the brightness of this light."""
         return self.coordinator.data.get("brightness")
 
     @property
-    def hs_color(self) -> Optional[tuple]:
+    def hs_color(self) -> tuple | None:
         """Return the hs color value."""
         return self.coordinator.data.get("hs_color")
 
     @property
-    def effect_list(self) -> Optional[List[str]]:
+    def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
         return self.coordinator.data.get("profiles")
 
     @property
-    def effect(self) -> Optional[str]:
+    def effect(self) -> str | None:
         """Return the current effect."""
         return self.coordinator.data.get("profile")
 
@@ -129,7 +130,7 @@ class PrismatikLight(CoordinatorEntity, LightEntity):
         return DEFAULT_ICON_ON if self.available else DEFAULT_ICON_OFF
 
     @property
-    def extra_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra state attributes."""
         return {
             "led_count": self.coordinator.data.get("led_count"),

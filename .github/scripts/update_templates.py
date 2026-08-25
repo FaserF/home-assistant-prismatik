@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
+import json
 import os
 import re
 import sys
 import urllib.request
-import json
 
 
 def get_latest_ha_version():
@@ -66,7 +65,7 @@ def clean_and_update_template(file_path, integration_version, ha_version, repo_n
     if not os.path.exists(file_path):
         return False
 
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, encoding="utf-8") as f:
         content = f.read()
 
     original_content = content

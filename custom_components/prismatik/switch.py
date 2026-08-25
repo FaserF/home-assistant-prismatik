@@ -1,6 +1,7 @@
 """Prismatik switch entities."""
 
-from typing import Any, Callable, List, Optional
+from collections.abc import Callable
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -9,14 +10,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .prismatik import PrismatikAPI
 from .coordinator import PrismatikDataUpdateCoordinator
+from .prismatik import PrismatikAPI
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[List[SwitchEntity], bool], None],
+    async_add_entities: Callable[[list[SwitchEntity], bool], None],
 ) -> None:
     """Set up the Prismatik switch entities."""
     data = hass.data[DOMAIN][config_entry.entry_id]
@@ -45,7 +46,7 @@ class PrismatikMoodlightSwitch(CoordinatorEntity, SwitchEntity):
         }
 
     @property
-    def is_on(self) -> Optional[bool]:
+    def is_on(self) -> bool | None:
         """Return true if moodlight mode is on."""
         return self.coordinator.data.get("mode") == PrismatikAPI.MOD_MOODLIGHT
 
@@ -67,7 +68,7 @@ class PrismatikMoodlightSwitch(CoordinatorEntity, SwitchEntity):
         data = self.hass.data[DOMAIN]
         # Find config to get profile name
         profile = None
-        for entry_id, entry_data in data.items():
+        for _entry_id, entry_data in data.items():
             if entry_data["client"] == self._client:
                 profile = entry_data["config"].get("profile_name")
                 break

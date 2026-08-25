@@ -1,6 +1,6 @@
 """Prismatik button entities."""
 
-from typing import Callable, List
+from collections.abc import Callable
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
@@ -15,7 +15,7 @@ from .coordinator import PrismatikDataUpdateCoordinator
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[List[ButtonEntity], bool], None],
+    async_add_entities: Callable[[list[ButtonEntity], bool], None],
 ) -> None:
     """Set up the Prismatik button entities."""
     data = hass.data[DOMAIN][config_entry.entry_id]

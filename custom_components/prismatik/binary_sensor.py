@@ -1,6 +1,6 @@
 """Prismatik binary sensor entities."""
 
-from typing import Callable, List, Optional
+from collections.abc import Callable
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -17,7 +17,7 @@ from .coordinator import PrismatikDataUpdateCoordinator
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[List[BinarySensorEntity], bool], None],
+    async_add_entities: Callable[[list[BinarySensorEntity], bool], None],
 ) -> None:
     """Set up the Prismatik binary sensor entities."""
     data = hass.data[DOMAIN][config_entry.entry_id]
@@ -48,7 +48,7 @@ class PrismatikAPIStatusBinarySensor(CoordinatorEntity, BinarySensorEntity):
         }
 
     @property
-    def is_on(self) -> Optional[bool]:
+    def is_on(self) -> bool | None:
         """Return true if API is busy."""
         return self.coordinator.data.get("api_status") == "busy"
 

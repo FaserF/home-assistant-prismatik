@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_PORT,
     Platform,
 )
+
 from .const import DOMAIN
 from .coordinator import PrismatikDataUpdateCoordinator
 from .prismatik import PrismatikClient

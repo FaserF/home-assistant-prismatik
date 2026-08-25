@@ -1,7 +1,6 @@
 """Config flow for Prismatik integration."""
 
 import voluptuous as vol
-
 from homeassistant import config_entries, exceptions
 from homeassistant.const import (
     CONF_API_KEY,
@@ -13,7 +12,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 
 from .const import DEFAULT_NAME, DEFAULT_PORT, DEFAULT_PROFILE_NAME, DOMAIN
-
 from .prismatik import PrismatikClient
 
 
@@ -130,27 +128,13 @@ class PrismatikOptionsFlowHandler(PrismatikFlow, config_entries.OptionsFlow):
     def __init__(self, config_entry):
         """Initialize options flow."""
         super().__init__()
-        self._host = (
-            config_entry.data[CONF_HOST] if CONF_HOST in config_entry.data else None
+        self._host = config_entry.data.get(CONF_HOST, None)
+        self._port = config_entry.data.get(CONF_PORT, DEFAULT_PORT)
+        self._name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
+        self._profile_name = config_entry.data.get(
+            CONF_PROFILE_NAME, DEFAULT_PROFILE_NAME
         )
-        self._port = (
-            config_entry.data[CONF_PORT]
-            if CONF_PORT in config_entry.data
-            else DEFAULT_PORT
-        )
-        self._name = (
-            config_entry.data[CONF_NAME]
-            if CONF_NAME in config_entry.data
-            else DEFAULT_NAME
-        )
-        self._profile_name = (
-            config_entry.data[CONF_PROFILE_NAME]
-            if CONF_PROFILE_NAME in config_entry.data
-            else DEFAULT_PROFILE_NAME
-        )
-        self._apikey = (
-            config_entry.data[CONF_API_KEY] if CONF_API_KEY in config_entry.data else ""
-        )
+        self._apikey = config_entry.data.get(CONF_API_KEY, "")
 
     async def async_step_init(self, user_input=None):  # pylint: disable=unused-argument
         """Manage the options."""

@@ -4,7 +4,7 @@ import asyncio
 import logging
 import re
 from enum import Enum
-from typing import Any, List, Optional, Tuple
+from typing import Any
 
 from .const import CONNECTION_RETRY_ERRORS
 
@@ -80,7 +80,7 @@ class PrismatikClient:
         self,
         host: str,
         port: int,
-        apikey: Optional[str],
+        apikey: str | None,
     ) -> None:
         """Intialize."""
         self._host = host
@@ -88,8 +88,8 @@ class PrismatikClient:
         self._apikey = apikey
         self._retries = CONNECTION_RETRY_ERRORS
         self._api_connected = False
-        self._tcpreader: Optional[asyncio.StreamReader] = None
-        self._tcpwriter: Optional[asyncio.StreamWriter] = None
+        self._tcpreader: asyncio.StreamReader | None = None
+        self._tcpwriter: asyncio.StreamWriter | None = None
         self._last_connect_time = 0.0
 
     async def _connect(self) -> bool:
@@ -116,7 +116,7 @@ class PrismatikClient:
                 if not header.startswith(str(PrismatikAPI.AWR_HEADER)):
                     _LOGGER.error("Bad API header")
                     await self.disconnect()
-        except (ConnectionRefusedError, TimeoutError, OSError):
+        except ConnectionRefusedError, TimeoutError, OSError:
             if self._retries > 0:
                 self._retries -= 1
                 _LOGGER.error(
@@ -137,7 +137,7 @@ class PrismatikClient:
             self._tcpreader = None
             self._tcpwriter = None
 
-    async def _send(self, buffer: str) -> Optional[str]:
+    async def _send(self, buffer: str) -> str | None:
         """Send command to Prismatik server."""
         if self._tcpwriter is None and (await self._connect()) is False:
             raise OSError("Could not connect to Prismatik server")
@@ -155,7 +155,7 @@ class PrismatikClient:
                 await self._tcpwriter.drain()
                 await asyncio.sleep(0.01)
                 data = await self._tcpreader.readline()
-            answer: Optional[str] = data.decode().strip()
+            answer: str | None = data.decode().strip()
         except (OSError, TimeoutError) as err:
             if self._retries > 0:
                 self._retries -= 1
@@ -182,7 +182,7 @@ class PrismatikClient:
                 self._api_connected = True
         return answer
 
-    async def _get_cmd(self, cmd: PrismatikAPI) -> Optional[str]:
+    async def _get_cmd(self, cmd: PrismatikAPI) -> str | None:
         """Execute get-command Prismatik server."""
         answer = await self._send(f"get{cmd}\n")
         matches = RE_CMD_RESULT.match(answer or "")
@@ -194,7 +194,7 @@ class PrismatikClient:
         """Execute set-command Prismatik server."""
         return await self._send(f"set{cmd}:{value}\n") == PrismatikAPI.AWR_OK
 
-    async def _do_cmd(self, cmd: PrismatikAPI, value: Optional[Any] = None) -> bool:
+    async def _do_cmd(self, cmd: PrismatikAPI, value: Any | None = None) -> bool:
         """Execute other command Prismatik server."""
         value = f":{value}" if value else ""
         answer = await self._send(f"{cmd}{value}\n")
@@ -205,7 +205,7 @@ class PrismatikClient:
             is not None
         )
 
-    async def _set_rgb_color(self, rgb: Tuple[int, int, int]) -> bool:
+    async def _set_rgb_color(self, rgb: tuple[int, int, int]) -> bool:
         """Generate and execude setcolor command on Prismatik server."""
         leds = await self.leds()
         if leds == 0:
@@ -251,9 +251,7 @@ class PrismatikClient:
         """Turn OFF."""
         return await self._set_cmd(PrismatikAPI.CMD_SET_STATUS, PrismatikAPI.STS_OFF)
 
-    async def set_brightness(
-        self, brightness: int, profile: Optional[str] = None
-    ) -> bool:
+    async def set_brightness(self, brightness: int, profile: str | None = None) -> bool:
         """Set brightness (0-100)."""
         if not await self._set_cmd(PrismatikAPI.CMD_SET_BRIGHTNESS, brightness):
             return False
@@ -264,13 +262,13 @@ class PrismatikClient:
             on_unlock = PrismatikAPI.STS_ON
         return await self._set_cmd(PrismatikAPI.CMD_SET_PERSIST_ON_UNLOCK, on_unlock)
 
-    async def get_brightness(self) -> Optional[int]:
+    async def get_brightness(self) -> int | None:
         """Get brightness (0-100)."""
         brightness = await self._get_cmd(PrismatikAPI.CMD_GET_BRIGHTNESS)
         return int(brightness) if brightness is not None else None
 
     async def set_color(
-        self, rgb: Tuple[int, int, int], profile: Optional[str] = None
+        self, rgb: tuple[int, int, int], profile: str | None = None
     ) -> bool:
         """Set (R,G,B) to all LEDs"""
         if profile:
@@ -282,7 +280,7 @@ class PrismatikClient:
                 return False
         return await self._set_rgb_color(rgb)
 
-    async def get_color(self) -> Optional[Tuple[int, int, int]]:
+    async def get_color(self) -> tuple[int, int, int] | None:
         """Get current (R,G,B) for the first LED"""
         pixels = await self._get_cmd(PrismatikAPI.CMD_GET_COLOR)
         rgb = RE_RGB_MATCH.match(pixels or "")
@@ -298,12 +296,12 @@ class PrismatikClient:
         """Lock API"""
         return await self._do_cmd(PrismatikAPI.CMD_LOCK)
 
-    async def get_profiles(self) -> Optional[List]:
+    async def get_profiles(self) -> list | None:
         """Get profile list"""
         profiles = await self._get_cmd(PrismatikAPI.CMD_GET_PROFILES)
         return list(filter(None, profiles.split(";"))) if profiles else None
 
-    async def get_profile(self) -> Optional[str]:
+    async def get_profile(self) -> str | None:
         """Get current profile name"""
         return await self._get_cmd(PrismatikAPI.CMD_GET_PROFILE)
 
@@ -315,11 +313,11 @@ class PrismatikClient:
             return False
         return await self._set_cmd(PrismatikAPI.CMD_SET_PROFILE, profile)
 
-    async def get_api_status(self) -> Optional[str]:
+    async def get_api_status(self) -> str | None:
         """Get API status (busy/idle)."""
         return await self._get_cmd(PrismatikAPI.CMD_GET_STATUS_API)
 
-    async def get_gamma(self) -> Optional[float]:
+    async def get_gamma(self) -> float | None:
         """Get gamma value."""
         gamma = await self._get_cmd(PrismatikAPI.CMD_GET_GAMMA)
         return float(gamma) if gamma is not None else None
@@ -328,7 +326,7 @@ class PrismatikClient:
         """Set gamma value."""
         return await self._set_cmd(PrismatikAPI.CMD_SET_GAMMA, gamma)
 
-    async def get_smooth(self) -> Optional[int]:
+    async def get_smooth(self) -> int | None:
         """Get smoothness value."""
         smooth = await self._get_cmd(PrismatikAPI.CMD_GET_SMOOTH)
         return int(smooth) if smooth is not None else None

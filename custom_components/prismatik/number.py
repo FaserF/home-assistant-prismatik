@@ -1,6 +1,6 @@
 """Prismatik number entities."""
 
-from typing import Callable, List, Optional
+from collections.abc import Callable
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
@@ -15,7 +15,7 @@ from .coordinator import PrismatikDataUpdateCoordinator
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[List[NumberEntity], bool], None],
+    async_add_entities: Callable[[list[NumberEntity], bool], None],
 ) -> None:
     """Set up the Prismatik number entities."""
     data = hass.data[DOMAIN][config_entry.entry_id]
@@ -68,7 +68,7 @@ class PrismatikGammaNumber(PrismatikNumber):
         self._attr_native_step = 0.1
 
     @property
-    def native_value(self) -> Optional[float]:
+    def native_value(self) -> float | None:
         """Return current value."""
         return self.coordinator.data.get("gamma")
 
@@ -95,7 +95,7 @@ class PrismatikSmoothnessNumber(PrismatikNumber):
         self._attr_native_step = 1
 
     @property
-    def native_value(self) -> Optional[float]:
+    def native_value(self) -> float | None:
         """Return current value."""
         return self.coordinator.data.get("smoothness")
 

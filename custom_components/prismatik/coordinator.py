@@ -1,12 +1,12 @@
 """DataUpdateCoordinator for Prismatik integration."""
 
-from datetime import timedelta
 import logging
-from typing import Any, Dict
+from datetime import timedelta
+from typing import Any
 
+import homeassistant.util.color as color_util
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-import homeassistant.util.color as color_util
 
 from .const import DOMAIN
 from .prismatik import PrismatikAPI, PrismatikClient
@@ -28,7 +28,7 @@ class PrismatikDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=5),
         )
 
-    async def _async_update_data(self) -> Dict[str, Any]:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from Prismatik."""
         try:
             if not self.client.is_reachable:
